@@ -1,0 +1,3 @@
+```sh
+node server.js
+```
