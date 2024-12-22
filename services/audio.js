@@ -28,8 +28,10 @@ async function loadTTSPipeline() {
   }
 }
 
-loadASRModel();
-loadTTSPipeline();
+if (process.env.LOAD_AUDIO && process.env.LOAD_AUDIO == "1") {
+  loadASRModel(); // Load the automatic speech recognition model on server start
+  loadTTSPipeline(); // Load the text-to-speech model on server start
+}
 
 // Function to perform ASR on an audio file (or buffer)
 async function transcribeAudio(audioPath) {

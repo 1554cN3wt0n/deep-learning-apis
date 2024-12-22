@@ -3,7 +3,11 @@ const multer = require("multer");
 const router = express.Router();
 const logger = require("../logger");
 
-const { classifyImage, detectObjects } = require("../services/vision");
+const {
+  classifyImage,
+  detectObjects,
+  segmentImage,
+} = require("../services/vision");
 
 // Configure multer for image uploads
 const upload = multer({ dest: "uploads/" });
@@ -127,6 +131,60 @@ router.post("/detect", upload.single("image"), async (req, res) => {
     res.status(200).json({ objects: detectedObjects });
   } catch (error) {
     res.status(500).json({ error: "Failed to detect objects" });
+  }
+});
+
+// POST endpoint for image segmentation
+/**
+ * @swagger
+ * /vision/segment:
+ *   post:
+ *     summary: Segment an image using a MobileVIT model
+ *     tags: [Vision]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The image to be segmented
+ *     responses:
+ *       200:
+ *         description: Image segmentation result
+ *         content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The segmented image
+ *       400:
+ *         description: Bad request, image file is missing
+ *       500:
+ *         description: Image segmentation failed
+ */
+router.post("/segment", upload.single("image"), async (req, res) => {
+  const imagePath = req.file.path;
+
+  if (!imagePath) {
+    return res.status(400).json({ error: "Image file is required" });
+  }
+
+  try {
+    const imageSegmented = await segmentImage(imagePath);
+    res.status(200).json({
+      segmentation: imageSegmented.map((e) => {
+        return { label: e.label, score: e.score };
+      }),
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to segment image" });
   }
 });
 

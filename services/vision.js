@@ -4,6 +4,7 @@ const logger = require("../logger");
 
 let imageClassificationPipeline;
 let objectDetectionPipeline;
+let imageSegmentationPipeline;
 
 async function loadImageClassificationModel() {
   if (!imageClassificationPipeline) {
@@ -29,8 +30,23 @@ async function loadObjectDetectionModel() {
   }
 }
 
-// loadImageClassificationModel();
-// loadObjectDetectionModel();
+// Function to load the image segmentation pipeline
+async function loadImageSegmentationModel() {
+  if (!imageSegmentationPipeline) {
+    const { pipeline } = await import("@huggingface/transformers");
+    imageSegmentationPipeline = await pipeline(
+      "image-segmentation",
+      "Xenova/detr-resnet-50-panoptic"
+    );
+    logger.info("Image segmentation model loaded.");
+  }
+}
+
+if (process.env.LOAD_VISION && process.env.LOAD_VISION == "1") {
+  loadImageClassificationModel(); // Load the image classification model on server start
+  loadObjectDetectionModel(); // Load the object detection model on server start
+  loadImageSegmentationModel(); // Load the image segmentation model on server start
+}
 
 async function classifyImage(imagePath) {
   try {
@@ -63,7 +79,24 @@ async function detectObjects(imagePath) {
   }
 }
 
+// Function to segment an image
+async function segmentImage(imagePath) {
+  try {
+    // Ensure the model is loaded
+    await loadImageSegmentationModel();
+
+    // Segmented image
+    const segmentedImage = await imageSegmentationPipeline(imagePath);
+
+    return segmentedImage;
+  } catch (error) {
+    logger.error("Error during image segmentation:", error);
+    throw new Error("Image segmentation failed");
+  }
+}
+
 module.exports = {
   classifyImage,
   detectObjects,
+  segmentImage,
 };

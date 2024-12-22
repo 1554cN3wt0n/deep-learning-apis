@@ -44,9 +44,11 @@ async function loadSimilarityModel() {
   }
 }
 
-// loadTextGenerationModel(); // Load the text generation model on server start
-// loadQAModel(); // Load the question answering model on server start
-// loadSimilarityModel(); // Load the question answering model on server start
+if (process.env.LOAD_NLP && process.env.LOAD_NLP == "1") {
+  loadTextGenerationModel(); // Load the text generation model on server start
+  loadQAModel(); // Load the question answering model on server start
+  loadSimilarityModel(); // Load the question answering model on server start
+}
 
 // Generate text based on the input prompt
 async function generateText(prompt, options = {}) {
